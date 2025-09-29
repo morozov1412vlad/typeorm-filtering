@@ -1,120 +1,95 @@
-# Turborepo starter
+# TypeORM Filtering
 
-This is a community-maintained example. If you experience a problem, please submit a pull request with a fix. GitHub Issues will be closed.
+## Motivation
 
-## Using this example
+There is often a need for different SaaS platforms to have certain reporting tool. Such tools often include advanced filtering functionality that is often implemented from scratch. The main idea of this prototype app is to define certain interface for contracts between API consumer and API service related to filtering.
 
-Run the following command:
+# Contract Overview
 
-```bash
-npx create-turbo@latest -e with-nestjs
+There are three main interfaces that are used for filtering:
+
+- Compound Filter: used to filter entity records, expects `filters` property to be specified that has Conditional Block filter as value.
+- Primitive Filter: used to define conditions for primitives (acceptance criteria for values in a given column of entity table).
+- Conditional Block Filter: consists of two fields: `operator` and `conditions`. Defines whether intesection or union of child filters is needed, as well as whether it should be negated or not. `conditions` is an array of other Conditional Block Filters, Primitive Filters and Compound Filters.
+
+Compound Filter and Attribute Filter require property to be specified `attribute` that inidicates full paths from target entity to entity/value specified in a given Compound/Primitive Filter respectively.
+
+Full definitions of contract interfaces can be found in `apps/filtering-api/src/filtering/filter.types.ts`.
+
+Small example from demo app:
+
+Description: `Filter for users that have post with title containing "2" and post with title containing "3"`
+```
+    {
+      attribute: 'users',
+      filters: {
+        conditional_operator: ConditionalOperator.AND,
+        conditions: [
+          {
+            attribute: 'users.posts',
+            filters: {
+              conditional_operator: ConditionalOperator.AND,
+              conditions: [
+                {
+                  attribute: 'users.posts.title',
+                  operator: PrimitiveFilterOperator.CONTAINS,
+                  value: '2',
+                },
+              ],
+            },
+          },
+          {
+            attribute: 'users.posts',
+            filters: {
+              conditional_operator: ConditionalOperator.AND,
+              conditions: [
+                {
+                  attribute: 'users.posts.title',
+                  operator: PrimitiveFilterOperator.CONTAINS,
+                  value: '3',
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
 ```
 
-## What's inside?
+# NestJS integration
 
-This Turborepo includes the following packages/apps:
+Filtering app also includes module, service and @InjectFilter decorator for easier integration with NestJS.
 
-### Apps and Packages
+# Demo Overview
 
-    .
-    ├── apps
-    │   ├── api                       # NestJS app (https://nestjs.com).
-    │   └── web                       # Next.js app (https://nextjs.org).
-    └── packages
-        ├── @repo/api                 # Shared `NestJS` resources.
-        ├── @repo/eslint-config       # `eslint` configurations (includes `prettier`)
-        ├── @repo/jest-config         # `jest` configurations
-        ├── @repo/typescript-config   # `tsconfig.json`s used throughout the monorepo
-        └── @repo/ui                  # Shareable stub React component library.
+Demo app is a simple REST API app that uses Postgres. There're three tables: users, posts and comments + one junction table for defining user followers.
 
-Each package and application are 100% [TypeScript](https://www.typescriptlang.org/) safe.
+There are three POST EPs to filter posts, users and comments. Each EP expects filter for respective entity.
 
-### Utilities
+## Starting Demo App
 
-This `Turborepo` has some additional tools already set for you:
+In order to start demo app you first of all need to install dependencies and create .env file in `apps/filtering-api` with DB configuration:
 
-- [TypeScript](https://www.typescriptlang.org/) for static type-safety
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-- [Jest](https://prettier.io) & [Playwright](https://playwright.dev/) for testing
-
-### Commands
-
-This `Turborepo` already configured useful commands for all your apps and packages.
-
-#### Build
-
-```bash
-# Will build all the app & packages with the supported `build` script.
-pnpm run build
-
-# ℹ️ If you plan to only build apps individually,
-# Please make sure you've built the packages first.
+```
+DATABASE_HOST=
+DATABASE_PORT=
+DATABASE_USER=
+DATABASE_PASSWORD=
+DATABASE_NAME=
 ```
 
-#### Develop
+Then switch to `cd apps/filtering-api` directory and:
 
-```bash
-# Will run the development server for all the app & packages with the supported `dev` script.
-pnpm run dev
-```
+1. Run migrations by executing `pnpm run typeorm migration:run`.
+2. (Optional) prefill DB with some test data by running `pnpm run seed`.
 
-#### test
+Switch back to root directory (`cd ../..`) and run `pnpm run dev`.
 
-```bash
-# Will launch a test suites for all the app & packages with the supported `test` script.
-pnpm run test
+This command will start server and client apps. Client app has some predefined examples and additional field to perform your own filtering tests.
 
-# You can launch e2e testes with `test:e2e`
-pnpm run test:e2e
+# Future work
 
-# See `@repo/jest-config` to customize the behavior.
-```
-
-#### Lint
-
-```bash
-# Will lint all the app & packages with the supported `lint` script.
-# See `@repo/eslint-config` to customize the behavior.
-pnpm run lint
-```
-
-#### Format
-
-```bash
-# Will format all the supported `.ts,.js,json,.tsx,.jsx` files.
-# See `@repo/eslint-config/prettier-base.js` to customize the behavior.
-pnpm format
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```bash
-npx turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```bash
-npx turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+1. Currently EntityFilter metadata exists to further define Filter Service for the model. Two different declarations of the same entity filter class will result into the same rules for filtering. However, entity filter class definitions should be more useful and allow to define rules for things like pre-filtering, aliases, fields to exclude from filtering, allowed operators and so on.
+2. As DB schema definition exist on the BE side, any UI for filtering should be BE-driven. It would be great to define certain contract that will take Entity filter class definition and send it to the client as a configuration for filtering form.
+3. Implement definitions for filtering for virtual entities. Currently DB views and meterealized views can be used to define additional entities. But ideally, it should be possible to define virtual entities during runtime for further processing.
+4. Aggregation. Aggregation was not planned to be part of this project. However, aggregation is also common need for reporting tools, as well as filtering of aggregated data. That's why it would be great to define contract intefaces and rules for data aggregation, but it's a lot more complex task and point 3 should be done before aggregation.

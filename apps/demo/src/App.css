@@ -1,0 +1,40 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.content {
+  width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.example {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  background-color: #101010;
+}
+
+.example > .header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.example > .header > p {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.example > .header > button {
+  flex-shrink: 0;
+}

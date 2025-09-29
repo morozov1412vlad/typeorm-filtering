@@ -68,7 +68,7 @@ There are three POST EPs to filter posts, users and comments. Each EP expects fi
 
 ## Starting Demo App
 
-In order to start demo app you first of all need to install dependencies and create .env file in `apps/filtering-api` with DB configuration:
+In order to start demo app you first of all need to install dependencies (`pnpm install`) and create .env file in `apps/filtering-api` with DB configuration:
 
 ```
 DATABASE_HOST=

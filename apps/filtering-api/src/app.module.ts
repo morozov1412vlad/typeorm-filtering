@@ -1,7 +1,5 @@
 import 'dotenv/config';
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { FilterModule } from './filtering/nest/filter.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User, Post, Comment } from './demo/entities';
@@ -23,7 +21,5 @@ import { DemoModule } from './demo/demo.module';
     FilterModule.forRoot([UserFilter, CommentFilter, PostFilter]),
     DemoModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
